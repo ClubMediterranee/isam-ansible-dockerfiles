@@ -1,16 +1,26 @@
 # isam-ansible docker version 2.0
 FROM centos:7
 
+ARG proxy
+
 ENV container docker
 
 # Install OS pre-requisites
-RUN yum -y update; yum clean all
-RUN yum -y install epel-release; yum clean all
-RUN yum -y install unzip gcc curl openssl-devel openssh-client git python python-pip python-crypto python-ldap python-devel; yum clean all
+RUN export http_proxy=$proxy; export https_proxy=$proxy \
+    && export HTTP_PROXY=$proxy; export HTTPS_PROXY=$proxy \
+    && yum -y update; yum clean all \
+    && yum -y install epel-release; yum clean all \
+    && yum -y install unzip gcc curl openssl-devel openssh-client git python python-pip python-crypto python-ldap python-devel; yum clean all \
+    && unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 
 # Install/Update Python modules
-RUN pip install --upgrade pip requests ansible
-RUN pip install --upgrade git+https://github.com/ibm-security/ibmsecurity#egg=ibmsecurity
+RUN export http_proxy=$proxy; export https_proxy=$proxy \
+    && export HTTP_PROXY=$proxy; export HTTPS_PROXY=$proxy \
+    && pip install --upgrade pip requests ; pip install ansible==2.7.1
+RUN export http_proxy=$proxy; export https_proxy=$proxy \
+    && export HTTP_PROXY=$proxy; export HTTPS_PROXY=$proxy \
+    && pip install --upgrade git+https://github.com/ibm-security/ibmsecurity#egg=ibmsecurity \
+    && unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 
 # Remove packages to save space
 RUN yum -y remove epel-release gcc openssl-devel
@@ -24,7 +34,10 @@ RUN mkdir -p /ansible/playbooks
 WORKDIR /ansible/playbooks
 
 # Prepare ISAM Ansible Common Roles 
-RUN ansible-galaxy install -c -p /etc/ansible/roles git+https://github.com/ibm-security/isam-ansible-roles.git 
+RUN export http_proxy=$proxy; export https_proxy=$proxy \
+    && export HTTP_PROXY=$proxy; export HTTPS_PROXY=$proxy \
+    && ansible-galaxy install -c -p /etc/ansible/roles git+https://github.com/ibm-security/isam-ansible-roles.git \
+    && unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 
 ENV ANSIBLE_GATHERING smart
 ENV ANSIBLE_HOST_KEY_CHECKING false
