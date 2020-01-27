@@ -33,10 +33,13 @@ RUN echo "[local]" >> /etc/ansible/hosts && \
 RUN mkdir -p /ansible/playbooks
 WORKDIR /ansible/playbooks
 
+ENV IBM_ROLES_REF git+https://github.com/ibm-security/isam-ansible-roles.git
+ENV IBM_ROLES_REF git+https://github.com/ClubMediterranee/isam-ansible-roles.git,fix/docker-friendly
+
 # Prepare ISAM Ansible Common Roles 
 RUN export http_proxy=$proxy; export https_proxy=$proxy \
     && export HTTP_PROXY=$proxy; export HTTPS_PROXY=$proxy \
-    && ansible-galaxy install -c -p /etc/ansible/roles git+https://github.com/ibm-security/isam-ansible-roles.git \
+    && ansible-galaxy install -c -p /etc/ansible/roles $IBM_ROLES_REF \
     && unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 
 ENV ANSIBLE_GATHERING smart
@@ -46,6 +49,7 @@ ENV ANSIBLE_ROLES_PATH /etc/ansible/roles/isam-ansible-roles
 ENV ANSIBLE_SSH_PIPELINING True
 ENV PATH /ansible/bin:$PATH
 ENV PYTHONPATH /ansible/lib
+RUN mkdir -p /root/.ssh ; chmod 755 /root/.ssh; ssh-keygen -b 2048 -t rsa -f /root/.ssh/id_rsa -q -N ""
 
 ENTRYPOINT ["ansible-playbook"]
 
